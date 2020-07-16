@@ -1,0 +1,14 @@
+{
+  "name": "even-or-odd",
+  "version": "1.0.0",
+  "description": "> \"Write a function that accepts a random integer as a parameter and returns whether the integer is even or odd\"",
+  "main": "run.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "robotjs": "^0.6.0"
+  }
+}
