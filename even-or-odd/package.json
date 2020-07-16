@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "inquirer": "^7.3.2",
     "robotjs": "^0.6.0"
   }
 }
