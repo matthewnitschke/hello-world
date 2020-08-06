@@ -1,6 +1,10 @@
 const robot = require("robotjs");
 const inquirer = require('inquirer');
 
+function isThisNumberEvenOrOdd(num) {
+    console.log(`The number ${num} is ${num % 2 == 0 ? 'even' : 'odd'}`)
+}
+
 function sumHex(hex) {
     var bigint = parseInt(hex, 16);
     var r = (bigint >> 16) & 255;
@@ -53,5 +57,5 @@ inquirer
             }
         }
 
-        console.log(sum)
+        isThisNumberEvenOrOdd(sum)
     })
