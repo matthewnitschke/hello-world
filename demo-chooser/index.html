@@ -161,7 +161,7 @@
                     if (!this.isRunning) return;
 
                     this.taps++;
-
+                    
                     socket.emit('client-update', {
                         name: this.name,
                         taps: this.taps,
