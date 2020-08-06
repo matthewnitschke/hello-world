@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@2.3.0/dist/socket.io.js"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.3/build/pure-min.css" integrity="sha384-cg6SkqEOCV1NbJoCu11+bm0NvBRc8IYLRGXkmNrqUBfTjmMYwNKPWBTIKyw9mHNJ" crossorigin="anonymous">
+
+    <style>
+        html,body,#app {
+            height: 100%;
+            margin: 0;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .h100 {
+            height: 100%;
+        }
+
+        .container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container-item {
+            height: 33.3333%;
+        }
+
+        .admin-panel {
+            width: 5rem;
+            height: 10rem;
+            position:fixed;
+            top: 0;
+            right: 0;
+            text-align: right;
+        }
+
+        .name-container {
+            text-align: center;
+            margin-top:5rem;
+        }
+        .mt2 {
+            margin-top: .7rem;
+        }
+
+        .tac {
+            text-align: center;
+        }
+
+        ol {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+
+        <div v-if="isAdmin" class="admin-panel">
+            <input type="button" value="Start" v-on:click="adminStart"><br>
+            <input type="button" value="Reset" v-on:click="adminReset">
+        </div>
+
+        <div v-if="!hasName" class="h100">
+            <form class="name-container pure-form">
+                <input type="text" style="margin: auto" placeholder="Enter your name" v-model="name"> <br>
+                <input type="submit" v-on:click="enterName" class="mt2 pure-button pure-button-primary" value="Enter">
+            </form>
+        </div>
+
+        <div class="h100" v-else>
+            
+            <div class="container">
+                <div class="container-item">
+                    <ol>
+                        <li v-for="item in sortedLeaderboards">
+                            {{item.taps}} - {{item.name}}
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="container-item tac">
+                    <h1>{{serverMessage}}</h1>
+                </div>
+    
+                <button 
+                    v-on:click="tap"
+                    class="container-item pure-button">{{taps}}</button>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        var socket = io(`${window.location.origin}`);
+
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+
+        var app = new Vue({
+            el: '#app',
+            data: {
+                name: "",
+                hasName: false,
+                taps: 0,
+                leaderboards: {},
+                serverMessage: "Not Started",
+                isRunning: false,
+                isAdmin: getParameterByName('admin') == 'true'
+            },
+            computed: {
+                sortedLeaderboards: function() {
+                    let lst = Object.keys(this.leaderboards).map((name) => {
+                        return {
+                            name: name,
+                            taps: this.leaderboards[name]
+                        }
+                    })
+
+                    lst.sort((a, b) => {
+                        return b.taps - a.taps
+                    })
+
+                    return lst
+                }
+            },
+            mounted: function() {
+                socket.on('server-update', (data) => {
+                    this.leaderboards = data
+                });
+
+                socket.on('server-message', (msg) => {
+                    this.serverMessage = msg
+                })
+
+                socket.on('server-start', () => this.isRunning = true)
+                socket.on('server-stop', () => this.isRunning = false)
+                socket.on('server-reset', () => {
+                    this.taps = 0
+                    this.serverMessage = 'Not Started'
+                })
+            },
+            methods: {
+                enterName: function() {
+                    this.hasName = true
+                },
+                tap: function() {
+                    if (!this.isRunning) return;
+
+                    this.taps++;
+
+                    socket.emit('client-update', {
+                        name: this.name,
+                        taps: this.taps,
+                    })
+                },
+                adminStart: function() {
+                    socket.emit('admin-start')
+                },
+                adminReset: function() {
+                    socket.emit('admin-reset')
+                }
+            }
+        })
+    </script>
+</body>
+</html>
